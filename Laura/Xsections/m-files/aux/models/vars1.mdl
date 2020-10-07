@@ -1,0 +1,36 @@
+HAHM+2DarkFermions
+ Parameters
+  Name         | Value       |> Comment                                                                <|
+mZDinput       |20           |Zd mass AFTER mixing (i.e. the mass eigenvalue)                           |
+MHSinput       |200          |Singlet-like Higgs mass AFTER mixing (i.e. the mass eigenvalue)           |
+MD1input       |20           |Mass of the dark fermion AFTER fermion mixing (i.e. the mass eigenvalue)  |
+MD2input       |10           |Mass of the dark fermion AFTER fermion mixing (i.e. the mass eigenvalue)  |
+tthetainput    |-5 + E       |Tan theta D, mixing angle of dark fermions                                |
+epsilon        |0.01         |U(1)X - U(1)Y kinetic mixing parameter in SURVEY BASIS = chi * Cos[theta_w|
+aXM1           |127.9        |Inverse of the U(1)X coupling constant                                    |
+swsq           |0.225        |Sin[Theta_w] SM value                                                     |
+aEWM1          |127.9        |Inverse of the electroweak coupling constant                              |
+Gf             |0.00001166390|Fermi constant                                                            |
+aS             |0.118        |Strong coupling constant at the Z pole.                                   |
+ymc            |1.42         |Charm Yukawa mass                                                         |
+ymb            |4.7          |Bottom Yukawa mass                                                        |
+ymt            |174.3        |Top Yukawa mass                                                           |
+ymtau          |1.777        |Tau Yukawa mass                                                           |
+cabi           |0.488        |Cabibbo angle                                                             |
+mZinput        |91.188       |Z mass AFTER mixing, i.e. the mass eigenstate                             |
+MHinput        |125          |SM Higgs mass AFTER mixing, i.e. the mass eigenstate                      |
+GG             |1.21771578477|Strong coupling constant   This value will be ignored and calculated from |
+MTA            |1.777        |Mass of tt.                                                               |
+MC             |1.42         |Mass of c.                                                                |
+MT             |174.3        |Mass of t.                                                                |
+MB             |4.7          |Mass of b.                                                                |
+%WT            |1.50833649   |Width of t.                                                               |
+%WD1           |1            |Width of Chi1.                                                            |
+%WD2           |1            |Width of Chi2.                                                            |
+%WZ            |2.44140351   |Width of Z.                                                               |
+%WZp           |0.0008252    |Width of Zp.                                                              |
+%WW            |2.04759951   |Width of W.                                                               |
+%WH            |0.00282299   |Width of h.                                                               |
+%WHS           |5.23795      |Width of hs.                                                              |
+E              |2.71828182845|The base of the natural logarithm.                                        |
+Pi             |3.14159265358|The circumference of a circle divided by the diameter.                    |
