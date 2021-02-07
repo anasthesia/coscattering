@@ -8,7 +8,10 @@ SMMasses={MB->4200,MC->1270,MT->17300,MU->22*10^-1,MD->47*10^-1,MS->96,ME->511*1
 Relations={cw->Sqrt[1-swsq],sw->Sqrt[swsq],swsq->225*10^-3,aEW->10/1279,EE->2*Sqrt[aEW*Pi],gX->2*Sqrt[Pi aX]
 ,ta->-(-1+DZ+eta^2*sw^2+SignAux*Sqrt[4*eta^2*sw^2+(-1+DZ+eta^2*sw^2)^2])/(2*eta*sw),ca->1/Sqrt[1+ta^2],sa->ta/Sqrt[1+ta^2],eta->(epsilon/cw)/Sqrt[1-(epsilon/cw)^2]
 ,chi->epsilon/cw,DZ->(MZ^-2*MZp^-2*(MZ^4+MZp^4+MZp^2*(-2*eta^2*MZ^2*sw^2-SignAux*Sqrt[MZ^4+MZp^4-2*MZ^2*MZp^2*(1+2*eta^2*sw^2)])-MZ^2*SignAux*Sqrt[MZ^4+MZp^4-2*MZ^2*MZp^2*(1+2*eta^2*sw^2)]))/2,
-SignAux->(MZ-MZp)/Sqrt[(MZ-MZp)^2],ctheta->1/Sqrt[1+ttheta^2],stheta->ttheta/Sqrt[1+ttheta^2],WZp->If[MZp<2*MD2,0,ca^2 ctheta^4 eta^2 gX^2 Sqrt[-4 MD2^2+MZp^2] (2 MD2^2+MZp^2)/(12 chi^2 MZp^2 \[Pi])]};
+SignAux->(MZ-MZp)/Sqrt[(MZ-MZp)^2],ctheta->1/Sqrt[1+ttheta^2],stheta->ttheta/Sqrt[1+ttheta^2],WZp->(EE^2*Sqrt[(-4*ME^2 + MZp^2)]*(cw^4*sa^2 - 2*cw^2*sa*sw*(ca*eta + sa*sw) 
++ 5*sw^2*(ca*eta + sa*sw)^2))/(96*cw^2*Pi*sw^2) +ca^2 ctheta^4 eta^2 gX^2 Sqrt[-4 MD2^2+MZp^2] (2 MD2^2+MZp^2)/(12 chi^2 MZp^2 \[Pi])HeavisideTheta[MZp-2*MD2]
++ca^2 stheta^4 eta^2 gX^2 Sqrt[-4 MD1^2+MZp^2] (2 MD1^2+MZp^2)/(12 chi^2 MZp^2 \[Pi])HeavisideTheta[MZp-2*MD1]
+-(ca^2*ctheta^2*eta^2*gX^2*Sqrt[(-(MD1-MD2)^2+MZp^2)*(-(MD1+MD2)^2+MZp^2)]*(MD1^4+MD2^4-6*MD1*MD2*MZp^2+MD2^2*MZp^2-2*MZp^4+MD1^2*(-2*MD2^2+MZp^2))*stheta^2)/(12*chi^2*MZp^5*Pi)HeavisideTheta[MZp-(MD1+MD2)]};
 
 
 (* ::Text:: *)
@@ -25,7 +28,7 @@ gEffSFunc[T_]:=If[T>gEffSTemp[[Length[gEffSTemp],1]],gEffSTemp[[Length[gEffSTemp
 gEffFunc[T_]:=If[T>gEffTemp[[Length[gEffTemp],1]],gEffTemp[[Length[gEffTemp],2]],Interpolation[gEffSTemp,T,InterpolationOrder->SetPrecision[1,Infinity]]];
 
 Mpl=2435*10^15;(*Gev*)
-rhoR[T_]:=gEffc(*Func[T]*)*Pi^2/30*T^4/.gEffc->10675/100;
+rhoR[T_]:=gEffFunc[T]*Pi^2/30*T^4/.gEffc->10675/100;
 H[T_]:=Sqrt[rhoR[T]/3]/Mpl;
 Hbar[T_]:=H[T]*(1+ND[Log[gEffSFunc[x]],x,T]/(3T))^-1;
 
@@ -60,10 +63,10 @@ integrand= (E1cm^2-Mass1^2)\[Sigma] Sqrt[s]*BesselK[1,Sqrt[s]*x/MD1];
 (*Print[Table[{10^(y/10),N[\[Sigma]//.Join[Param]/.{s\[Rule]10^(y/10)*smin},31]},{y,0,20}]];
 Print[ListLogLogPlot[Table[{10^(y/10),N[integrand//.Join[Param]/.{s\[Rule]10^(y/10)*smin},101]},{y,0,20}],Joined\[Rule]True]];*)
 
-IntMi=NIntegrate[N[integrand//.Join[Param]/.{s->y*smin},31],{y,1,Infinity},WorkingPrecision->20]*smin;
+IntMi=NIntegrate[N[integrand*10^-50//.Join[Param]/.{s->y*smin},31],{y,1,Infinity},WorkingPrecision->20]*10^50*smin;
 IntM=IntM+IntMi;
 ];
-Return[MD1/(8 Pi^4 x)*IntM/.ModelParam];
+Return[MD1/(8 Pi^4 x)*IntM//.ModelParam];
  ]
 
 
@@ -107,7 +110,7 @@ YDMintermediate=YeqDM[xInt];*)
 dYDM[x_]:= -l[x]*CoscatRate[x]*(YDM[x]/YeqDM[x]-YMed[x]/YeqMed[x]);(*Should also include decays?*)
 dYMed[x_]:=-l[x]*(MedAnnRate[x]*(YMed[x]^2/YeqMed[x]^2-1)-CoscatRate[x]*(YDM[x]/YeqDM[x]-YMed[x]/YeqMed[x]));
 
-sol= NDSolve[{YDM'[x]==dYDM[x],YMed'[x]==dYMed[x],YDM[xmin]==YeqDM[xmin],YMed[xmin]==YeqMed[xmin]},{YMed,YDM},{x,xmin,xmax},Method->"StiffnessSwitching",WorkingPrecision->20];
+sol= NDSolve[{YDM'[x]==dYDM[x],YMed'[x]==dYMed[x],YDM[xmin]==YeqDM[xmin],YMed[xmin]==YeqMed[xmin]},{YMed,YDM},{x,xmin,xmax},Method->"StiffnessSwitching",WorkingPrecision->20,AccuracyGoal->25];
 
 Ydm[x_]:=YDM[x]/.sol[[1]];
 Ymed[x_]:=YMed[x]/.sol[[1]];
@@ -120,18 +123,19 @@ Return[(YDM[xmax]+YMed[xmax])/.sol[[1]]];
 (*Calculates the DM abundance for a specific set of model parameters*)
 
 
-DMabundance[ModelParam_]:=Module[{xmin,xmax,xval,consts,DataCoscatRate,DataMedAnnRate,DatasvMedAnn},
-xmax=400;
-xmin=10^-3;
-xval=Round[10^Range[Log10[xmin],Log10[xmax],0.05]*10^5]*10^-5;
+DMabundance[ModelParam_]:=Module[{xmin,xmax,xval,consts,DataCoscatRate,DataMedAnnRate,DatasvMedAnn,DataDMScatRate},
+xmax=100;
+xmin=1;
+xval=Round[10^Range[Log10[xmin],Log10[xmax],0.04]*10^5]*10^-5;
 
 DataCoscatRate=AveragedXsec[ModelParam,3,xval];
 CoscatRate[x_]:=If[x<DataCoscatRate[[-1,1]],Exp[Interpolation[Log[DataCoscatRate],Log[x],InterpolationOrder->1]],0];
 
 DataMedAnnRate=AveragedXsec[ModelParam,2,xval];
 MedAnnRate[x_]:=If[x<DataMedAnnRate[[-1,1]],Exp[Interpolation[Log[DataMedAnnRate],Log[x],InterpolationOrder->1]],0];
-(*DatasvMedAnn=Table[{DataMedAnnRate[[i,1]],DataMedAnnRate[[i,2]]/neqMed[DataMedAnnRate[[i,1]]]^2},{i,1,Length[DataMedAnnRate]}];
-svMedAnn[x_]:=Exp[Interpolation[Log[DatasvMedAnn],Log[x],InterpolationOrder->1]];*)
+
+DataDMScatRate=AveragedXsec[ModelParam,1,xval];
+DMScatRate[x_]:=If[x<DataDMScatRate[[-1,1]],Exp[Interpolation[Log[DataDMScatRate],Log[x],InterpolationOrder->1]],0];
 
 consts={Mpl->2.435*10^18,T0->2.348*10^-13,H0->2.131*10^-42,s0->(1+21/22)*2*Pi^2/45*2*T0^3,CritDens->3*H0^2*Mpl^2 };
 Return[MD1*s0*SolveCoupledBE[ModelParam,xmin,xmax]/CritDens/.ModelParam//.consts];
@@ -140,9 +144,9 @@ Return[MD1*s0*SolveCoupledBE[ModelParam,xmin,xmax]/CritDens/.ModelParam//.consts
 ]
 
 
-DataForPlot[ModelParam_]:=Module[{xmax2,xFO,CoscatRate,xmin,xmax,xval,DataCoscatRate},
+DataForPlot[ModelParam_,x_]:=Module[{xmax2,xFO,CoscatRate,xmin,xmax,xval,DataCoscatRate},
 
-xmax=400;
+(*xmax=400;
 xmin=10^-3;
 xval=Round[10^Range[Log10[xmin],Log10[xmax],0.05]*10^5]*10^-5;
 
@@ -155,24 +159,32 @@ If[CoscatRate[xmax]/neqDM[xmax]>H[MD1/xmax]/.ModelParam,Return[{-2,-2,-2}]];
 
 xFO=x/.FindRoot[CoscatRate[x]/(neqDM[x]*H[MD1/x])-1/.ModelParam,{x,xmin,xmax}];
 
-If[!(xmin<xFO<xmax),Return[{-3,-3,-3}]];
+If[!(xmin<xFO<xmax),Return[{-3,-3,-3}]];*)
 
-Return[{CalcGaScat[ModelParam,xFO,2]/(neqDM[xFO]*H[MD1/xFO]),CalcGaScat[ModelParam,1,3]/(neqDM[1]*H[MD1]),CalcGaScat[ModelParam,xFO,1]/(neqDM[xFO]*H[MD1/xFO])}/.ModelParam]
+Return[{CalcGaScat[ModelParam,x,2]/(neqDM[x]*H[MD1/x])(*,CalcGaScat[ModelParam,1,3]/(neqDM[1]*H[MD1])*),CalcGaScat[ModelParam,x,1]/(neqDM[x]*H[MD1/x])}/.ModelParam]
 
 ]
 
 
 script:=Module[{},
 
-data={};
-For[LogMZp=1,LogMZp<2,LogMZp=LogMZp+1/2,
- For[LogTanT=-2,LogTanT<=0,LogTanT=LogTanT+1/2,
-  For[LogEpsM=-2,LogEpsM<=-1,LogEpsM=LogEpsM+1/4,
-   ModelParam={aX->1,epsilon->10^-2,ttheta->10^LogTanT,MZp->10^LogMZp,MD1->10^1,MD2->MD1*(1+10^LogEpsM)};
-   AppendTo[data,Join[{LogMZp//N,LogEpsM//N,LogTanT//N},DataForPlot[ModelParam]]];
-]]]
+data10={};
+data20={};
+data30={};
+For[LogMZp=3,LogMZp<=3,LogMZp=LogMZp+1/2,
+ For[LogTanT=-3,LogTanT<=0,LogTanT=LogTanT+1/4,
+  For[LogEpsM=-2,LogEpsM<=1,LogEpsM=LogEpsM+1/4,
+   ModelParam={aX->1,epsilon->10^-4,ttheta->10^LogTanT,MZp->10^LogMZp,MD1->10^2,MD2->MD1*(1+10^LogEpsM)};
+   AppendTo[data10,Join[{LogMZp//N,LogEpsM//N,LogTanT//N},DataForPlot[ModelParam,10]]];
+   AppendTo[data20,Join[{LogMZp//N,LogEpsM//N,LogTanT//N},DataForPlot[ModelParam,20]]];
+   AppendTo[data30,Join[{LogMZp//N,LogEpsM//N,LogTanT//N},DataForPlot[ModelParam,30]]];
+];
+Print["Finished with LogTanT="<>ToString[LogTanT//N]];
+]]
 
-Export[NotebookDirectory[]<>"CoscatteringRegion2.dat",data]
+Export[NotebookDirectory[]<>"CoscatteringRegion2_x10.dat",data10];
+Export[NotebookDirectory[]<>"CoscatteringRegion2_x20.dat",data20];
+Export[NotebookDirectory[]<>"CoscatteringRegion2_x30.dat",data30];
 
 ]
 
