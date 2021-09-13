@@ -140,7 +140,7 @@ AveragedXsec[ModelParam_,process_,xval_]:=Module[{points,svScat,x,y,i,smax,fileN
 
 SolveCoupledBE[ModelParam_,xmin_,xmax_]:=Module[{l,dYDMinit,sol,sol1,YDMintermediate,dYDM,dYMed,YDM,YMed,consts,initCond,xInt,x2,YmedLargeX},
 
- l[x_]:=SetPrecision[1/(Hbar[MD1/x]*Entr[MD1/x]*x)//.ModelParam,21];
+ l[x_]:=SetPrecision[1/(H[MD1/x]*Entr[MD1/x]*x)//.ModelParam,21];
 
  dYDMinit[x_]:=-SetPrecision[l[x]*(CoAnnRate[x]*(YDM[x]/(YeqDM[x])-1)+(CoscatRate[x]+DecayRate[x])*(YDM[x]/(YeqDM[x])-1)),21];
  
