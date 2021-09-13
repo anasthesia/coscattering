@@ -29,7 +29,7 @@ gEffFunc[T_]:=If[T>gEffTemp[[Length[gEffTemp],1]],gEffTemp[[Length[gEffTemp],2]]
 LogDgEffSFunc=Interpolation[SetPrecision[Table[{gEffSTemp[[i,1]],Log10[ND[Log[gEffSFunc[x]],x,gEffSTemp[[i,1]]]]},{i,1,Length[gEffSTemp]}],21],InterpolationOrder->SetPrecision[1,Infinity]]
 
 Mpl=2.435*10^21;(*Mev*)
-rhoR[T_]:=gEffFunc[T]*Pi^2/30*T^4/.gEffc->1075/100;
+rhoR[T_]:=gEffc(*Func[T]*)*Pi^2/30*T^4/.gEffc->1075/100;
 H[T_]:=SetPrecision[Sqrt[rhoR[T]/3]/Mpl,6];
 Hbar[T_]:=H[T]*(1+T*10^LogDgEffSFunc[T]/3)^-1;
 
