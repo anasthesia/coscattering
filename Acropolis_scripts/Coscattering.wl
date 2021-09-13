@@ -29,17 +29,17 @@ gEffFunc[T_]:=If[T>gEffTemp[[Length[gEffTemp],1]],gEffTemp[[Length[gEffTemp],2]]
 LogDgEffSFunc=Interpolation[SetPrecision[Table[{gEffSTemp[[i,1]],Log10[ND[Log[gEffSFunc[x]],x,gEffSTemp[[i,1]]]]},{i,1,Length[gEffSTemp]}],21],InterpolationOrder->SetPrecision[1,Infinity]]
 
 Mpl=2.435*10^21;(*Mev*)
-rhoR[T_]:=gEffc(*Func[T]*)*Pi^2/30*T^4/.gEffc->1075/100;
-H[T_]:=Sqrt[rhoR[T]/3]/Mpl;
-Hbar[T_]:=H[T](*(1+T*10^LogDgEffSFunc[T]/3)^-1*);
+rhoR[T_]:=gEffFunc[T]*Pi^2/30*T^4/.gEffc->1075/100;
+H[T_]:=SetPrecision[Sqrt[rhoR[T]/3]/Mpl,6];
+Hbar[T_]:=H[T]*(1+T*10^LogDgEffSFunc[T]/3)^-1;
 
 Entr[T_]:=2Pi^2/45 gEffc(*SFunc[T]*)*T^3/.gEffc->1075/100;
 
-neqDM[x_]:=gDM*MD1^3/(2Pi^2x)BesselK[2,x]/.gDM->2//.ModelParam;
-YeqDM[x_]:=neqDM[x]/Entr[MD1/x]//.ModelParam;
+neqDM[x_]:=N[gDM*MD1^3/(2Pi^2x)BesselK[2,x]/.gDM->2//.ModelParam,21];
+YeqDM[x_]:=N[neqDM[x]/Entr[MD1/x]//.ModelParam,21];
 
-neqMed[x_]:=gMed*MD2^2*MD1/(2Pi^2x)BesselK[2,MD2*x/MD1]/.gMed->2//.ModelParam;
-YeqMed[x_]:=neqMed[x]/Entr[MD1/x]//.ModelParam;
+neqMed[x_]:=N[gMed*MD2^2*MD1/(2Pi^2x)BesselK[2,MD2*x/MD1]/.gMed->2//.ModelParam,21];
+YeqMed[x_]:=N[neqMed[x]/Entr[MD1/x]//.ModelParam,21];
 
 neq[x_,m_]:=m^2MD1/(2Pi^2x)BesselK[2,m*x/MD1]//.ModelParam;
 
@@ -124,8 +124,8 @@ AveragedXsec[ModelParam_,process_,xval_]:=Module[{points,svScat,x,y,i,smax,fileN
  svScat[x_]:=CalcGaScat[Join[ModelParam],x,process];
  points={};
  For[i=1,i<=Length[xval],i++,
-  y=Chop[svScat[xval[[i]]],10^-400];
-  If[y<10^-300,Break[]];
+  y=svScat[xval[[i]]];
+  (*If[y<10^-300,Break[]];*)
   points=Append[points,{xval[[i]],y}]
  ];
 
@@ -138,18 +138,18 @@ AveragedXsec[ModelParam_,process_,xval_]:=Module[{points,svScat,x,y,i,smax,fileN
 (*Solves the BE for a given set of parameters. It starts integrating from xmin to xmax*)
 
 
-SolveCoupledBE[ModelParam_,xmin_,xmax_]:=Module[{l,dYDMinit,sol,sol1,YDMintermediate,dYDM,dYMed,YDM,YMed,consts,initCond,xInt},
+SolveCoupledBE[ModelParam_,xmin_,xmax_]:=Module[{l,dYDMinit,sol,sol1,YDMintermediate,dYDM,dYMed,YDM,YMed,consts,initCond,xInt,x2,YmedLargeX},
 
  l[x_]:=SetPrecision[1/(Hbar[MD1/x]*Entr[MD1/x]*x)//.ModelParam,21];
 
  dYDMinit[x_]:=-SetPrecision[l[x]*(CoAnnRate[x]*(YDM[x]/(YeqDM[x])-1)+(CoscatRate[x]+DecayRate[x])*(YDM[x]/(YeqDM[x])-1)),21];
+ 
  xInt=10;
  sol1=NDSolve[{YDM'[x]==dYDMinit[x],YDM[xmin]==YeqDM[xmin]},{YDM},{x,xmin,xInt},Method->"StiffnessSwitching",WorkingPrecision->20];
  YDMintermediate=SetPrecision[YDM[xInt]/.sol1[[1]],21];
 
  (*xInt=xmin;
  YDMintermediate=YeqDM[xInt];*)
-
  dYDM[x_]:= -SetPrecision[l[x]*(CoAnnRate[x]*(YMed[x]*YDM[x]/(YeqMed[x]*YeqDM[x])-1)+(CoscatRate[x]+DecayRate[x])*(YDM[x]/(YeqDM[x])-YMed[x]/(YeqMed[x]))),21];
  dYMed[x_]:=-SetPrecision[l[x]*(MedAnnRate[x]*(YMed[x]^2/(YeqMed[x])^2-1)+CoAnnRate[x]*(YMed[x]*YDM[x]/(YeqMed[x]*YeqDM[x])-1)-(CoscatRate[x]+DecayRate[x])*(YDM[x]/(YeqDM[x])-YMed[x]/(YeqMed[x]))),21];
 
@@ -158,9 +158,13 @@ SolveCoupledBE[ModelParam_,xmin_,xmax_]:=Module[{l,dYDMinit,sol,sol1,YDMintermed
 
  (*Ydm[x_]:=YDM[x]/.sol[[1]];
  Ymed[x_]:=YMed[x]/.sol[[1]];*)
-
+ 
+ x2=SetPrecision[Max[y/.NSolve[Ga3BodyDecay==20*H[100/y],y,Reals]],6];
+ YmedLargeX[x_]:=SetPrecision[Ymed[x2]*Exp[-Ga3BodyDecay/H[MD1/x]/2+Ga3BodyDecay/H[MD1/x2]/2]//.ModelParam,6];
+ 
  Ydm[x_]:=If[x<xInt,YDM[x]/.sol1[[1]],YDM[x]/.sol[[1]]];
- Ymed[x_]:=If[x<xInt,YeqMed[x],YMed[x]/.sol[[1]]];
+ Ymed[x_]:=Which[x<xInt,YeqMed[x],x>x2,YmedLargeX[x],True,YMed[x]/.sol[[1]]];
+ (*Ymed[x_]:=Which[x<xInt,YeqMed[x],True,YMed[x]/.sol[[1]]];*)
 
  consts={Mpl->2.435*10^21,T0->2.348*10^-10,H0->2.131*10^-39,s0->(1+21/22)*2*Pi^2/45*2*T0^3,CritDens->3*H0^2*Mpl^2 };
  Return[2*MD1*s0*(YDM[xmax]+YMed[xmax])/CritDens/.sol[[1]]//.ModelParam//.consts](*Factor of 2 to account for anti particle*);
@@ -212,21 +216,21 @@ SolveCoscatBE[ModelParam_,xmin_,xmax_]:=Module[{l,sol,dYDM,dYMed,YDM,consts},
 ]
 
 
-CrossSections[ModelParam_,xmin_,xmax_]:=Module[{xval,consts,DataCoscatRate,DataCoAnnRate,DataMedAnnRate,DatasvMedAnn,DataDMScatRate,Ga3BodyDecay},
- xval=Round[10^Range[Log10[xmin],Log10[xmax],(Log10[xmax]-Log10[xmin])/49]*10^5]*10^-5;(*50 points in the range of xmin-xmax*)
-
+CrossSections[ModelParam_,xmin_,xmax_]:=Module[{xval,consts,DataCoscatRate,DataCoAnnRate,DataMedAnnRate,DatasvMedAnn,DataDMScatRate},
+ (*xval=Round[10^Range[Log10[xmin],Log10[xmax],(Log10[xmax]-Log10[xmin])/49]*10^5]*10^-5;50 points in the range of xmin-xmax*)
+ xval=N[10^Range[Log10[xmin],Log10[xmax],(Log10[xmax]-Log10[xmin])/49],21];
  DataCoscatRate=AveragedXsec[ModelParam,3,xval];
- CoscatRateTemp[x_]:=If[x<DataCoscatRate[[-1,1]],Exp[Interpolation[Log[DataCoscatRate],Log[x],InterpolationOrder->SetPrecision[1,Infinity],"ExtrapolationHandler"->{Indeterminate &, "WarningMessage" -> False}]],0];
+ CoscatRateTemp[x_]:=If[x<DataCoscatRate[[-1,1]],Exp[Interpolation[Log[DataCoscatRate],Log[x]]],0];
 
  DataMedAnnRate=AveragedXsec[ModelParam,2,xval];
- MedAnnRateTemp[x_]:=If[x<DataMedAnnRate[[-1,1]],Exp[Interpolation[Log[DataMedAnnRate],Log[x],InterpolationOrder->SetPrecision[1,Infinity]]],0];
+ MedAnnRateTemp[x_]:=If[x<DataMedAnnRate[[-1,1]],Exp[Interpolation[Log[DataMedAnnRate],Log[x]]],0];
  
  DataCoAnnRate=AveragedXsec[ModelParam,4,xval];
- CoAnnRateTemp[x_]:=If[x<DataCoAnnRate[[-1,1]],Exp[Interpolation[Log[DataCoAnnRate],Log[x],InterpolationOrder->SetPrecision[1,Infinity]]],0];
+ CoAnnRateTemp[x_]:=If[x<DataCoAnnRate[[-1,1]],Exp[Interpolation[Log[DataCoAnnRate],Log[x]]],0];
  
  (*
  DataDMScatRate=AveragedXsec[ModelParam,1,xval];
- DMScatRateTemp[x_]:=If[x<DataDMScatRate[[-1,1]],Exp[Interpolation[Log[DataDMScatRate],Log[x],InterpolationOrder->1,"ExtrapolationHandler"->{Indeterminate &, "WarningMessage" -> False}]],0];
+ DMScatRateTemp[x_]:=If[x<DataDMScatRate[[-1,1]],Exp[Interpolation[Log[DataDMScatRate],Log[x]]],0];
  *)
  Ga3BodyDecay=Calc3BodyDecayWidth[ModelParam,1];
  DecayRateTemp[x_]:=Ga3BodyDecay*BesselK[1,x*MD2/MD1]/BesselK[2,x*MD2/MD1]*neqMed[x]//.ModelParam;
@@ -238,6 +242,7 @@ CrossSections[ModelParam_,xmin_,xmax_]:=Module[{xval,consts,DataCoscatRate,DataC
 
 
 DMabundance[ModelParam_,xmin_,xmax_]:=Module[{xval,consts,DataCoAnnRate,DataCoscatRate,DataMedAnnRate,DatasvMedAnn,DataDMScatRate,Ga3BodyDecay},
+ 
  CrossSections[ModelParam,xmin,xmax];
  
  CoscatRate[x_]:=CoscatRateTemp[x];
